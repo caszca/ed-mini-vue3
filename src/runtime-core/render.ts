@@ -66,7 +66,9 @@ function processComponent(vnode, container) {
 
 function mountComponent(vnode, container) {
     const instance = createComponentInstance(vnode)
+    //初始化组件
     setupComponent(instance)
+    //渲染组件子元素
     setupRenderEffect(instance, container)
 }
 

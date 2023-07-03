@@ -1,3 +1,4 @@
+import { is } from "../utils/index.js"
 import { proxyHandler } from "./componentProxyHandler"
 
 export function createComponentInstance(vnode) {
@@ -9,11 +10,22 @@ export function createComponentInstance(vnode) {
     return vm
 }
 
+//初始化组件起点
 export function setupComponent(instance: any) {
     //todo 
     //initProps  initSlots
+    //初始化props
+    initProps(instance)
     setupStatefulComponent(instance)
 }
+
+function initProps(instance: any) {
+    const { props } = instance.vnode
+    if (is(props)) {
+        instance.props = props
+    }
+}
+
 
 //执行setup
 function setupStatefulComponent(instance: any) {
@@ -28,9 +40,9 @@ function setupStatefulComponent(instance: any) {
 }
 
 
-//处理setup()结果
+//处理、挂载setup()结果
 function handleSetupResult(setupResult: any, instance: any) {
-    if (typeof setupResult == "object") {
+    if (is(setupResult)) {
         instance.setupState = setupResult
     }
     finishComponentSetup(instance);

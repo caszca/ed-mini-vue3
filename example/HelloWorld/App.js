@@ -1,4 +1,5 @@
 import { h } from "../../lib/guide-mini-vue.esm.js"
+import Foo from "./Foo.js"
 window.self = null
 export default {
     setup(props) {
@@ -13,6 +14,7 @@ export default {
                 console.log("i am onclick")
             }
         }, "span"),
-        h("h1", { class: "skyblue" }, h("div", {}, "son")), "张翼德" + this.message])
+        h("h1", { class: "skyblue" }, h("div", {}, "son")), "张翼德" + this.message,
+        h(Foo, { message: "your are Foo" })])
     }
 }

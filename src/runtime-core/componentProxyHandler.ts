@@ -1,9 +1,12 @@
 export const proxyHandler = {
     get({ instance }, key) {
-        const { setupState } = instance
+        const { setupState, props } = instance
 
         if (key in setupState) {
             return setupState[key]
+        }
+        if (key in props) {
+            return props[key]
         }
         if (key in instance) {
             return instance[key]
