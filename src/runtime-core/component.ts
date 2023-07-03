@@ -1,12 +1,16 @@
-import { is } from "../utils/index.js"
+import { is } from "../utils/index"
 import { proxyHandler } from "./componentProxyHandler"
+import { emit } from "./componentContext"
 
+import { shallowReadonly } from "../reactivity/reactive"
 export function createComponentInstance(vnode) {
     const vm = {
         vnode,
         setupState: {},
-        $el: null
+        $el: null,
+        props: {}
     }
+
     return vm
 }
 
@@ -23,6 +27,8 @@ function initProps(instance: any) {
     const { props } = instance.vnode
     if (is(props)) {
         instance.props = props
+        //让emit函数能使用instance
+        instance.emit = emit.bind({}, instance)
     }
 }
 
@@ -34,7 +40,9 @@ function setupStatefulComponent(instance: any) {
 
     const { setup } = instance.vnode.type
     if (setup) {
-        const setupResult = setup()
+        const setupResult = setup(shallowReadonly(instance.props), {
+            emit: instance.emit
+        })
         handleSetupResult(setupResult, instance)
     }
 }
