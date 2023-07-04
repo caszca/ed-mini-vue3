@@ -4,13 +4,17 @@ import { proxyHandler } from "./componentProxyHandler"
 import { shallowReadonly } from "../reactivity/reactive"
 import { initProps } from "./componentProps"
 import { initSlots } from "./componentSlots"
-export function createComponentInstance(vnode) {
+export function createComponentInstance(vnode, parent) {
+
     const vm = {
         vnode,
         setupState: {},
         $el: null,
         $slots: null,
-        props: {}
+        $emit: () => { },
+        props: {},
+        provide: parent ? Object.create(parent.provide) : {}, //用于provide与inject
+        $parent: parent
     }
     return vm
 }
@@ -33,9 +37,11 @@ function setupStatefulComponent(instance: any) {
 
     const { setup } = instance.vnode.type
     if (setup) {
+        setCurrentInstance(instance)
         const setupResult = setup(shallowReadonly(instance.props), {
-            emit: instance.emit
+            emit: instance.$emit
         })
+        setCurrentInstance(null)
         handleSetupResult(setupResult, instance)
     }
 }
@@ -55,4 +61,14 @@ function finishComponentSetup(instance: any) {
     if (render) {
         instance.render = render
     }
+}
+
+//获取当前组件实例
+let currentInstance = null
+export function getCurrentInstance() {
+    return currentInstance
+}
+
+function setCurrentInstance(value) {
+    currentInstance = value
 }

@@ -6,6 +6,6 @@ export function initProps(instance: any) {
     if (is(props)) {
         instance.props = props
         //让emit函数能使用instance
-        instance.emit = emit.bind({}, instance)
+        instance.$emit = emit.bind({}, instance)
     }
 }
