@@ -1,19 +1,44 @@
 import { is } from "../utils/index"
 import { createComponentInstance, setupComponent } from "./component"
+import { Fragment, Text } from "./vnode";
 
 export function render(vnode, conatiner) {
     patch(vnode, conatiner)
 }
 
 export function patch(vnode, container) {
-    //此处用于区分是组件还是element
-    //如果是组件还需要创建组件实例挂载数据等
-    if (is(vnode.type)) {
-        processComponent(vnode, container)
-    } else if (typeof vnode.type == "string") {
-        processElement(vnode, container)
+    const { type, children } = vnode
+    switch (type) {
+        case Fragment:
+            //此时不需要处理自身，直接处理children
+            processFragment(children, container)
+            break;
+        case Text:
+            processText(children, container)
+            break;
+
+        default:
+            //此处用于区分是组件还是element
+            //如果是组件还需要创建组件实例挂载数据等
+            if (is(type)) {
+                processComponent(vnode, container)
+            } else if (typeof type == "string") {
+                processElement(vnode, container)
+            }
+            break;
     }
 }
+
+function processText(children, container) {
+    const node = document.createTextNode(children)
+    container.append(node)
+}
+
+//处理Fragment
+function processFragment(children, container) {
+    mountChildren(children, container)
+}
+
 //处理element元素开始
 function processElement(vnode: any, container: any) {
     mountElement(vnode, container)
@@ -42,16 +67,23 @@ function mountElement(vnode: any, container: any) {
         }
     }
 
-    //处理子元素，注意分为3中情况字符串与h()与[]
+    //处理子元素，注意只有2种情况字符串与[]
     if (typeof children == "string") {
         element.textContent = children
     } else if (children instanceof Array) {
-        children.forEach((child) => {
-            patch(child, element)
-        })
+        mountChildren(children, element)
     }
     container.append(element)
 }
+
+
+//此处可抽离，额外供给Fragment使用
+function mountChildren(children, element) {
+    children.forEach((child) => {
+        patch(child, element)
+    })
+}
+
 
 
 
@@ -68,8 +100,6 @@ function mountComponent(vnode, container) {
     setupRenderEffect(instance, container)
 }
 
-
-
 function setupRenderEffect(instance, container) {
     //此subTree下方的第一个虚拟节点
     const subTree = instance.vnode.type.render.call(instance.proxy)
@@ -77,5 +107,6 @@ function setupRenderEffect(instance, container) {
     //将$el挂载在实例对象上
     instance.$el = subTree.$el
 }
+
 
 

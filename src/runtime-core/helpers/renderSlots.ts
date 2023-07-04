@@ -1,4 +1,4 @@
-import { createVNode } from "../vnode";
+import { Fragment, createVNode } from "../vnode";
 
 //文件作用对传进来的slots进行创建vnode处理
 export function renderSlots(slots, name, data) {
@@ -15,7 +15,7 @@ export function renderSlots(slots, name, data) {
     const slot = slots[name]
     if (slot) {
         if (typeof slot == "function") {
-            return createVNode("div", {}, slot(data))
+            return createVNode(Fragment, {}, slot(data))
         }
     }
 }
