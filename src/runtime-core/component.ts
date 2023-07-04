@@ -1,16 +1,17 @@
 import { is } from "../utils/index"
 import { proxyHandler } from "./componentProxyHandler"
-import { emit } from "./componentContext"
 
 import { shallowReadonly } from "../reactivity/reactive"
+import { initProps } from "./componentProps"
+import { initSlots } from "./componentSlots"
 export function createComponentInstance(vnode) {
     const vm = {
         vnode,
         setupState: {},
         $el: null,
+        $slots: null,
         props: {}
     }
-
     return vm
 }
 
@@ -20,16 +21,8 @@ export function setupComponent(instance: any) {
     //initProps  initSlots
     //初始化props
     initProps(instance)
+    initSlots(instance)
     setupStatefulComponent(instance)
-}
-
-function initProps(instance: any) {
-    const { props } = instance.vnode
-    if (is(props)) {
-        instance.props = props
-        //让emit函数能使用instance
-        instance.emit = emit.bind({}, instance)
-    }
 }
 
 

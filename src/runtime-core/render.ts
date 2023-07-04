@@ -47,12 +47,8 @@ function mountElement(vnode: any, container: any) {
         element.textContent = children
     } else if (children instanceof Array) {
         children.forEach((child) => {
-            if (typeof child == "object")
-                patch(child, element)
-            else element.append(child)
+            patch(child, element)
         })
-    } else {
-        patch(children, element)
     }
     container.append(element)
 }
