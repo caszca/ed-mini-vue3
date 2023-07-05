@@ -4,6 +4,7 @@ import { proxyHandler } from "./componentProxyHandler"
 import { shallowReadonly } from "../reactivity/reactive"
 import { initProps } from "./componentProps"
 import { initSlots } from "./componentSlots"
+import { proxyRefs } from "../reactivity/ref"
 export function createComponentInstance(vnode, parent) {
 
     const vm = {
@@ -14,7 +15,9 @@ export function createComponentInstance(vnode, parent) {
         $emit: () => { },
         props: {},
         provide: parent ? Object.create(parent.provide) : {}, //用于provide与inject
-        $parent: parent
+        $parent: parent,
+        isMounted: false,
+        subTree: null
     }
     return vm
 }
@@ -50,7 +53,8 @@ function setupStatefulComponent(instance: any) {
 //处理、挂载setup()结果
 function handleSetupResult(setupResult: any, instance: any) {
     if (is(setupResult)) {
-        instance.setupState = setupResult
+        //此处用proxyRefs解包ref对象
+        instance.setupState = proxyRefs(setupResult)
     }
     finishComponentSetup(instance);
 }
