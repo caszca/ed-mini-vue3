@@ -113,3 +113,14 @@ vue3默认渲染到DOM平台，而如果我们想要将项目渲染到canvas平�
 另外因为patch的两个作用（注意事项里），我们需要传递参数时，需要传递前后两个vnode。
 ```
 
+
+
+## patchProps模块
+
+```
+更新DOM元素的attribute属性，得到prevnode与现在的vnode，preVnode中有$el，而现在的vnode中是不存在的，
+所以我们只需要针对prevnode中$el进行修改就行了，注意我们是修改同一个DOM，更新多个vnode
+1.旧props的foo的值改变。如果变为undefined或null就删除掉
+2.旧props的foo在新的中没有。
+3。新的props有旧的里没有的
+```

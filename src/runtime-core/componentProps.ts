@@ -1,6 +1,7 @@
 import { is } from "../utils/index"
 import { emit } from "./componentContext"
 
+export const EMITY_PROPS={}
 export function initProps(instance: any) {
     const { props } = instance.vnode
     if (is(props)) {

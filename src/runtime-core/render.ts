@@ -1,6 +1,7 @@
 import { effect } from "../reactivity/effect";
 import { is } from "../utils/index"
 import { createComponentInstance, setupComponent } from "./component"
+import { EMITY_PROPS } from "./componentProps";
 import { createAppWrapper } from "./createApp";
 import { Fragment, Text } from "./vnode";
 
@@ -58,8 +59,29 @@ export function createRenderer(options) {
         }
     }
 
+
     function patchElement(preVnode, vnode, container, parent) {
         console.log("update")
+        const el=vnode.$el= preVnode.$el
+        const preProps=preVnode.props||EMITY_PROPS
+        const props=vnode.props||EMITY_PROPS
+        patchProps(el,preProps,props)
+    }
+
+    //更新props
+    function patchProps(el,preProps,props){
+        if(preProps!=props){
+            for (const key in preProps) {
+                const preVal = preProps[key];
+                const val=props[key]
+                patchProp(el,key,preVal,val)
+        }
+        for (const key in props) {
+                const val = props[key];
+                if(!(key in preProps))
+                patchProp(el,key,null,val)
+        }
+        }
     }
 
     function mountElement(vnode: any, container: any, parent) {
@@ -72,7 +94,7 @@ export function createRenderer(options) {
         //挂载元素属性，注意props为对象
         for (const key in props) {
             const value = props[key]
-            patchProp(element, key, value)
+            patchProp(element, key,null, value)
         }
 
 
@@ -133,6 +155,5 @@ export function createRenderer(options) {
         //此处正好需要导出一个creatApp,采用高阶函数
         createApp: createAppWrapper(render)
     }
-
 }
 
