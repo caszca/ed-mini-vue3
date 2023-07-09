@@ -8,8 +8,6 @@ alt+F8跳转到当前文件报错地方
 
 ```
 
-
-
 ## 插槽模块
 
 ```tex
@@ -25,7 +23,7 @@ alt+F8跳转到当前文件报错地方
 
 4.作用域插槽 作用域插槽时，父组件需要能访问到子组件传递过来的数据，children里对象key-value，
 value变为函数接收 子组件调用时传递过来的数据。 init时处理函数slots时，
-因为要确保函数返回的是数组vnode，所以需要处理如下封装一个高阶函数： 
+因为要确保函数返回的是数组vnode，所以需要处理如下封装一个高阶函数：
 slot[key] = (props) => normalizeToArray(value(props))
 ```
 
@@ -36,9 +34,7 @@ slot[key] = (props) => normalizeToArray(value(props))
 我们需要去除这层div，就需要采取一种新的patch模式，采用的Fragment
 ```
 
-
-
-## getCurrentInstance模块
+## getCurrentInstance 模块
 
 ```
 在setup中(只限于setup中)获取当前的组件实例，当前vue官网不存在这个方法，
@@ -47,9 +43,7 @@ slot[key] = (props) => normalizeToArray(value(props))
 getCurrentInstance只能在setup中调用，我们可以推测其实现方法就是用全局变量在setup()前后设置为instance与null
 ```
 
-
-
-## Provide与inject模块
+## Provide 与 inject 模块
 
 ```tex
 provide与inject，官网描述请确保provide()是在setup()中同步调用，说明其中使用到了getCurrentInstance()。
@@ -64,15 +58,13 @@ provide与inject，官网描述请确保provide()是在setup()中同步调用，
 思考：多层嵌套，最后一层如何获得第一层的provide，$parent指向的是自己parent组件，这是无法更改的。
 (注意根组件$parent为null)
 	 初始时我们是通过instance.$parent.provide[key]来获取，但不适用多层嵌套。
-	 
+
 实现方法：那我们只能将子组件的provide赋值为父组件的provide来获取。
 
 问题：上述实现后，发现当前组件的provide会覆盖父祖组件的provide相同key值的value。
 实现方法：原型链，注意inject时是将$parent的provide出去，因为如果inject自己的provide出去，
 会在当前组件inject到自己，而不是上层组件
 ```
-
-
 
 ## createRenderer()渲染器模块
 
@@ -91,8 +83,6 @@ vue3默认渲染到DOM平台，而如果我们想要将项目渲染到canvas平�
 可以看看官网的createRender
 ```
 
-
-
 ## 更新元素模块
 
 ```
@@ -101,7 +91,7 @@ vue3默认渲染到DOM平台，而如果我们想要将项目渲染到canvas平�
 实现方法：我们首先分析，我们调用this.count时，通过代理对象在组件实例中的setupState中查找对应的value。
 		所以我们可以针对setup返回的对象数据，将其包裹在一个解包函数proxyRefs，
 		其原理就是又创建一个代理对象，get时，将是ref对象的解包即可。
-		
+
 更新困难：我们更新了响应式对象数据时，怎样去更新vnode、视图。如何将reactive与runtime/core连接在一起。
 		我们是要根据响应式对象将依赖函数收集的，当某个响应式数据发生改变的时候，去更新使用到它的视图。
 		所以我们是要将更新视图的函数收集起来，通过effect，所以这个函数执行时内部需要有响应式数据才行，
@@ -112,4 +102,3 @@ vue3默认渲染到DOM平台，而如果我们想要将项目渲染到canvas平�
 接下来，我们要编写代码区分是首次mount还是更新视图。用组件实例一个属性表示即可，
 另外因为patch的两个作用（注意事项里），我们需要传递参数时，需要传递前后两个vnode。
 ```
-
