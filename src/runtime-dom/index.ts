@@ -11,7 +11,8 @@ function createText(text) {
 function setText(node, text) {
     node.textContent = text
 }
-function patchProp(element, key, value) {
+
+function patchProp(element, key, preVal,value) {
     //判断是否attribut是否是事件
     const onEvent = (event) => {
         return /^on[A-Z]/.test(event)
@@ -22,9 +23,13 @@ function patchProp(element, key, value) {
         element.addEventListener(e, value)
     }
     else {
-        element.setAttribute(key, value)
+        if(preVal!=value){
+            if(value==undefined||value==null)
+            element.removeAttribute(key)
+            else
+            element.setAttribute(key, value)
+        }
     }
-
 }
 
 function insert(el, parent) {
