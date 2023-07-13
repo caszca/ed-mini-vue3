@@ -29,8 +29,8 @@ function patchProp(element, key, preVal, value) {
   }
 }
 
-function insert(el, parent) {
-  parent.append(el);
+function insert(el, parent, anchor = null) {
+  parent.insertBefore(el, anchor);
 }
 
 //我本来想写的是直接传递父节点的el，将其直属的子节点全部删除，但是发现其好像不太通用

@@ -10,15 +10,15 @@ export function createRenderer(options) {
     options;
 
   function render(vnode, conatiner) {
-    patch(null, vnode, conatiner, null);
+    patch(null, vnode, conatiner, null, null);
   }
 
-  function patch(preVnode, vnode, container, parent) {
+  function patch(preVnode, vnode, container, parent, anchor) {
     const { type, children } = vnode;
     switch (type) {
       case Fragment:
         //此时不需要处理自身，直接处理children
-        processFragment(preVnode, vnode, container, parent);
+        processFragment(preVnode, vnode, container, parent, anchor);
         break;
       case Text:
         processText(preVnode, vnode, container);
@@ -28,9 +28,9 @@ export function createRenderer(options) {
         //此处用于区分是组件还是element
         //如果是组件还需要创建组件实例挂载数据等
         if (is(type)) {
-          processComponent(preVnode, vnode, container, parent);
+          processComponent(preVnode, vnode, container, parent, anchor);
         } else if (typeof type == "string") {
-          processElement(preVnode, vnode, container, parent);
+          processElement(preVnode, vnode, container, parent, anchor);
         }
         break;
     }
@@ -46,30 +46,43 @@ export function createRenderer(options) {
   }
 
   //处理Fragment
-  function processFragment(preVnode, vnode, container, parent) {
-    mountChildren(vnode, container, parent);
+  function processFragment(preVnode, vnode, container, parent, anchor) {
+    mountChildren(vnode, container, parent, anchor);
   }
 
   //处理element元素开始
-  function processElement(preVnode, vnode: any, container: any, parent) {
+  function processElement(
+    preVnode,
+    vnode: any,
+    container: any,
+    parent,
+    anchor
+  ) {
     if (preVnode) {
-      patchElement(preVnode, vnode, container, parent);
+      patchElement(preVnode, vnode, container, parent, anchor);
     } else {
-      mountElement(vnode, container, parent);
+      mountElement(vnode, container, parent, anchor);
     }
   }
 
-  function patchElement(preVnode, vnode, container, parent) {
+  function patchElement(preVnode, vnode, container, parent, anchor) {
     console.log("update");
     const el = (vnode.$el = preVnode.$el);
     const preProps = preVnode.props || EMITY_PROPS;
     const props = vnode.props || EMITY_PROPS;
-    patchChildren(el, preVnode, vnode,container, parent);
+    patchChildren(el, preVnode, vnode, container, parent, anchor);
     patchProps(el, preProps, props);
   }
 
   //更新子节点
-  function patchChildren(el: any, preVnode: any, vnode: any, container,parent) {
+  function patchChildren(
+    el: any,
+    preVnode: any,
+    vnode: any,
+    container,
+    parent,
+    anchor
+  ) {
     const preChild = preVnode.children;
     const child = vnode.children;
     if (typeof child == "string") {
@@ -84,11 +97,11 @@ export function createRenderer(options) {
     } else {
       if (is(preChild)) {
         //array——>array,注意此处传递的el作为container，因为我们DOM层级是逐层递深，更换容器在此处
-        patchKeyChildren(preChild,child,el,parent)
+        patchKeyChildren(preChild, child, el, parent, anchor);
       } else {
         //text->array
         setText(el, "");
-        mountChildren(vnode, el, parent);
+        mountChildren(vnode, el, parent, anchor);
       }
     }
   }
@@ -100,43 +113,55 @@ export function createRenderer(options) {
     }
   }
 
-  function patchKeyChildren(preChild,child,container,parent){
-    let i=0
-    let e1=preChild.length-1,e2=child.length-1  //比较三指针
-    function isSameVnodeType(n1,n2){
-      return n1.type==n2.type&&n1.key==n2.key
+  function patchKeyChildren(preChild, child, container, parent, anchor) {
+    //建议此处配合example加上自己画图分析
+    let i = 0;
+    let e1 = preChild.length - 1,
+      e2 = child.length - 1; //比较三指针
+    function isSameVnodeType(n1, n2) {
+      return n1.type == n2.type && n1.key == n2.key;
     }
     //左侧比较
-    while(i<=e1&&i<=e2){
-      if(isSameVnodeType(preChild[i],child[i])){
-        patch(preChild[i],child[i],container,parent)
-        i++
-      }else break
+    while (i <= e1 && i <= e2) {
+      if (isSameVnodeType(preChild[i], child[i])) {
+        patch(preChild[i], child[i], container, parent, anchor);
+        i++;
+      } else break;
     }
 
     //右侧比较
-  while(e1>=i&&e2>=i){
-    if(isSameVnodeType(preChild[e1],child[e2])){
-      patch(preChild[e1],child[e2],container,parent)
-      e1--
-      e2--
-    }else break
-  }
-
-  if(i>e1){
-    //老的被一次性对比完了，看新的情况了
-    if(i<=e2){
-      //此时新的还有剩余的，需要添加，但是新的位置需要分为两种情况来做
-      while(i<=e2){
-        patch(null,child[i],container,parent)
-        i++
-      }
+    while (e1 >= i && e2 >= i) {
+      if (isSameVnodeType(preChild[e1], child[e2])) {
+        patch(preChild[e1], child[e2], container, parent, anchor);
+        e1--;
+        e2--;
+      } else break;
     }
 
+    if (i > e1) {
+      //老的被一次性对比完了，看新的情况了
+      if (i <= e2) {
+        //此时新的还有剩余的，需要添加，但是新的位置需要分为两种情况来做,
+        //这里作为anchor的初始传递点之一，这里是比较开始，还有一处也许是render函数里的
+        while (i <= e2) {
+          let anchor = e1 < 0 ? preChild[e1 + 1].$el : null;
+          patch(null, child[i], container, parent, anchor);
+          i++;
+        }
+      }
+    } else {
+      //包含两种情况，新的被遍历完了或中间有乱序。
+      if (i > e2) {
+        //新的被遍历完了，接下来需要删除旧的节点。
+        while (i <= e1) {
+          remove(preChild[i].$el);
+          i++;
+        }
+      } else {
+        //中间乱序部分的处理开始
+      }
+    }
   }
-
-  }
-
 
   //更新props
   function patchProps(el, preProps, props) {
@@ -153,8 +178,7 @@ export function createRenderer(options) {
     }
   }
 
-
-  function mountElement(vnode: any, container: any, parent) {
+  function mountElement(vnode: any, container: any, parent, anchor) {
     const { type, props, children } = vnode;
     const element = createElement(type);
     //将每个自己DOM对象存储在自己vnode中
@@ -171,34 +195,33 @@ export function createRenderer(options) {
     if (typeof children == "string") {
       setText(element, children);
     } else if (children instanceof Array) {
-      mountChildren(vnode, element, parent);
+      mountChildren(vnode, element, parent, anchor);
     }
     // container.append(element)
-    insert(element, container);
+    insert(element, container, anchor);
   }
 
-
   //此处可抽离，额外供给Fragment使用,作用：将某个vnode的children挂载到某个DOM节点上
-  function mountChildren(vnode, element, parent) {
+  function mountChildren(vnode, element, parent, anchor) {
     vnode.children.forEach((child) => {
-      patch(null, child, element, parent);
+      patch(null, child, element, parent, anchor);
     });
   }
 
   //处理组件元素开始
-  function processComponent(preVnode, vnode, container, parent) {
-    mountComponent(vnode, container, parent);
+  function processComponent(preVnode, vnode, container, parent, anchor) {
+    mountComponent(vnode, container, parent, anchor);
   }
 
-  function mountComponent(vnode, container, parent) {
+  function mountComponent(vnode, container, parent, anchor) {
     const instance = createComponentInstance(vnode, parent);
     //初始化组件
     setupComponent(instance);
     //渲染组件子元素
-    setupRenderEffect(instance, container);
+    setupRenderEffect(instance, container, anchor);
   }
 
-  function setupRenderEffect(instance, container) {
+  function setupRenderEffect(instance, container, anchor) {
     effect(() => {
       //组件第一次挂载时
       if (!instance.isMounted) {
@@ -207,13 +230,13 @@ export function createRenderer(options) {
           instance.proxy
         ));
         //获取到children后patch，这是每个组件必过之地，且也是与children交互之地，传递自己作为父组件
-        patch(null, subTree, container, instance);
+        patch(null, subTree, container, instance, anchor);
         //将$el挂载在实例对象上
         instance.$el = subTree.$el;
         instance.isMounted = true;
       } else {
         const subTree = instance.vnode.type.render.call(instance.proxy);
-        patch(instance.subTree, subTree, container, instance);
+        patch(instance.subTree, subTree, container, instance, anchor);
         instance.subTree = subTree;
       }
     });
