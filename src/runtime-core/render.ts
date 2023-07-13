@@ -64,12 +64,12 @@ export function createRenderer(options) {
     const el = (vnode.$el = preVnode.$el);
     const preProps = preVnode.props || EMITY_PROPS;
     const props = vnode.props || EMITY_PROPS;
-    patchChildren(el, preVnode, vnode, parent);
+    patchChildren(el, preVnode, vnode,container, parent);
     patchProps(el, preProps, props);
   }
 
   //更新子节点
-  function patchChildren(el: any, preVnode: any, vnode: any, parent) {
+  function patchChildren(el: any, preVnode: any, vnode: any, container,parent) {
     const preChild = preVnode.children;
     const child = vnode.children;
     if (typeof child == "string") {
@@ -83,7 +83,8 @@ export function createRenderer(options) {
       }
     } else {
       if (is(preChild)) {
-        //array——>array
+        //array——>array,注意此处传递的el作为container，因为我们DOM层级是逐层递深，更换容器在此处
+        patchKeyChildren(preChild,child,el,parent)
       } else {
         //text->array
         setText(el, "");
@@ -99,6 +100,44 @@ export function createRenderer(options) {
     }
   }
 
+  function patchKeyChildren(preChild,child,container,parent){
+    let i=0
+    let e1=preChild.length-1,e2=child.length-1  //比较三指针
+    function isSameVnodeType(n1,n2){
+      return n1.type==n2.type&&n1.key==n2.key
+    }
+    //左侧比较
+    while(i<=e1&&i<=e2){
+      if(isSameVnodeType(preChild[i],child[i])){
+        patch(preChild[i],child[i],container,parent)
+        i++
+      }else break
+    }
+
+    //右侧比较
+  while(e1>=i&&e2>=i){
+    if(isSameVnodeType(preChild[e1],child[e2])){
+      patch(preChild[e1],child[e2],container,parent)
+      e1--
+      e2--
+    }else break
+  }
+
+  if(i>e1){
+    //老的被一次性对比完了，看新的情况了
+    if(i<=e2){
+      //此时新的还有剩余的，需要添加，但是新的位置需要分为两种情况来做
+      while(i<=e2){
+        patch(null,child[i],container,parent)
+        i++
+      }
+    }
+
+  }
+
+  }
+
+
   //更新props
   function patchProps(el, preProps, props) {
     if (preProps != props) {
@@ -113,6 +152,7 @@ export function createRenderer(options) {
       }
     }
   }
+
 
   function mountElement(vnode: any, container: any, parent) {
     const { type, props, children } = vnode;
@@ -136,6 +176,7 @@ export function createRenderer(options) {
     // container.append(element)
     insert(element, container);
   }
+
 
   //此处可抽离，额外供给Fragment使用,作用：将某个vnode的children挂载到某个DOM节点上
   function mountChildren(vnode, element, parent) {

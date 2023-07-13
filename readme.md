@@ -133,5 +133,22 @@ vue3默认渲染到DOM平台，而如果我们想要将项目渲染到canvas平�
 
 2.text——>text简单
 
-3.text->array，调用mountChildren，某个vnode的children挂载到某个DOM节点上
+3.text->array，调用mountChildren，某个vnode的children挂载到某个DOM节点上。
+
+4.array->array。目前想法就是创建3个指针，i、e1、e2。i用于左侧对比，e1、e2用于两个右侧对比。
+对比是否指针不是要移动吗，移动的前提就是两个vnode相同，而目前的相同判断是根据vnode的type，以及
+设置的props里的key值。
+
+ 注意此处有个重点思考，我们patchchildren时，如果当前vnode相同就需要去patch它的children,
+ 然后这里传递参数的容器的container，需要不断逐层深入，那么就需要将当前vnode的el作为container
+ 传入，详情见render/89行
+
+ 指针移动后，i、e1、e2停留位置，中间为乱序位置，这时我们要考虑一些情况。
+ 1.新的比旧的多，新的多在旧的后面
+ 2.新的比旧的多，新的多在旧的前面
+ 3.旧的比新的多，需要删除旧的前面。
+ 4.旧的比新的多，需要删除旧的后面。
+ 5.中间乱序。
+
+ 针对1、2中，当我们需要将新的vnode插入到容器当中时
 ```
