@@ -8,8 +8,8 @@ class computedRef {
     private _value
     constructor(getter) {
         this._effect = new reactiveEffect(getter)
-        //此后，只要响应式数据发生改变时，都不会执行依赖函数getter，
-        //而是去将ref对象的_dirty转为true，代表需要重新执行getter函数
+        //此后，只要响应式数据发生改变时，都不是去立即执行依赖函数getter，
+        //而是去将ref对象的_dirty转为true，代表需要重新执行getter函数，等待下次访问value，做到缓存作用。
         extend(this._effect, {
             scheduler: () => {
                 if (!this._dirty) this._dirty = true

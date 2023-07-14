@@ -144,7 +144,7 @@ export function createRenderer(options) {
         //此时新的还有剩余的，需要添加，但是新的位置需要分为两种情况来做,
         //这里作为anchor的初始传递点之一，这里是比较开始，还有一处也许是render函数里的
         while (i <= e2) {
-          let anchor = e1 < 0 ? preChild[e1 + 1].$el : null;
+          const anchor = e1 < 0 ? preChild[e1 + 1].$el : null;
           patch(null, child[i], container, parent, anchor);
           i++;
         }
@@ -159,6 +159,39 @@ export function createRenderer(options) {
         }
       } else {
         //中间乱序部分的处理开始
+        //首先建立映射表关于新的vnode。
+        const newKeyMapVNode = new Map()
+        for (let start = i; start <= e2; start++) {
+          const vnode = child[start]
+          newKeyMapVNode.set(vnode.key, vnode)
+        }
+        
+        //遍历旧vnode，寻找需要删除和patch的
+        for (let old = i; old <= e1; old++) {
+          let vnode=null
+          const preVnode = preChild[old]
+          //旧节点有key
+          if (preVnode.key != null) {
+             vnode = newKeyMapVNode.get(preVnode.key)
+            //在map中找到旧节点对于的key
+          }else{
+            //旧节点无key，遍历新节点查找
+            for(let n=i;n<=e2;n++){
+              if(isSameVnodeType(preVnode,child[n])){
+                vnode=preVnode
+                break
+              }
+            }
+          }
+
+          //查询结束，两种情况，有或无
+          if(vnode){
+            //此处patch时，是对新旧节点初始的patch，anchor为null
+            patch(preVnode,vnode,container,parent,null)
+          }else{
+            remove(preVnode.$el)
+          }
+        }
       }
     }
   }
