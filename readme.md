@@ -103,7 +103,7 @@ vue3默认渲染到DOM平台，而如果我们想要将项目渲染到canvas平�
 另外因为patch的两个作用（注意事项里），我们需要传递参数时，需要传递前后两个vnode。
 ```
 
-## patchProps 模块
+##  patchProps 模块
 
 ```
 更新DOM元素的attribute属性，得到prevnode与现在的vnode，preVnode中有$el，而现在的vnode中是不存在的，
@@ -212,3 +212,12 @@ oldIndexMapNewIndex[newIndex - i] = old + 1;注意赋值+1，代表着旧节点�
 则代表其需要创建新节点，value不为0，则代表需要参加移动判断。
 
 ```
+
+## 更新组件模块
+
+```
+现在一个组件里有另一个组件，响应式数据更新时，每次patch到component，执行mount操作，
+我们需要去判断添加update操作。
+一个组件需要更新patch时，需要重新去调用effect中的函数来patch它自己的subtree.  
+```
+

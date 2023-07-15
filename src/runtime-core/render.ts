@@ -270,19 +270,49 @@ export function createRenderer(options) {
 
   //处理组件元素开始
   function processComponent(preVnode, vnode, container, parent, anchor) {
-    mountComponent(vnode, container, parent, anchor);
+    if (preVnode) {
+      //更新组件
+      updateComponent(preVnode, vnode);
+    } else {
+      mountComponent(vnode, container, parent, anchor);
+    }
   }
 
   function mountComponent(vnode, container, parent, anchor) {
-    const instance = createComponentInstance(vnode, parent);
+    const instance = (vnode.instance = createComponentInstance(vnode, parent));
     //初始化组件
     setupComponent(instance);
     //渲染组件子元素
     setupRenderEffect(instance, container, anchor);
   }
 
+  //更新组件，判断传递进来的props是否改变，没有旧=就不再往下patch
+  function updateComponent(preVnode, vnode) {
+    const instance = (vnode.instance = preVnode.instance);
+    vnode.$el = preVnode.$el;
+    instance.vnode = vnode;
+    if (shouComponentUpdate(preVnode, vnode)) {
+      //需要更新
+      const { update } = instance;
+      instance.$props = vnode.props;
+      update();
+    }
+  }
+
+  //根据其传递进来的props判断是否需要更新，shallowEquall
+  function shouComponentUpdate(preVnode, vnode) {
+    const preProps = preVnode.props;
+    const { props } = vnode;
+    for (const key in props) {
+      if (preProps[key] !== props[key]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   function setupRenderEffect(instance, container, anchor) {
-    effect(() => {
+    instance.update = effect(() => {
       //组件第一次挂载时
       if (!instance.isMounted) {
         //此subTree下方的第一个虚拟节点
