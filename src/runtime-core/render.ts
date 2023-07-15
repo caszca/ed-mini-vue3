@@ -113,6 +113,7 @@ export function createRenderer(options) {
     }
   }
 
+  //vue中的diff算法
   function patchKeyChildren(preChild, child, container, parent, anchor) {
     //建议此处配合example加上自己画图分析
     let i = 0;
@@ -160,36 +161,57 @@ export function createRenderer(options) {
       } else {
         //中间乱序部分的处理开始
         //首先建立映射表关于新的vnode。
-        const newKeyMapVNode = new Map()
-        for (let start = i; start <= e2; start++) {
-          const vnode = child[start]
-          newKeyMapVNode.set(vnode.key, vnode)
+        let newLength = e2 - i + 1; //新节点乱序部分长度
+        const newKeyMapVNode = new Map(); //新节点key映射表
+        const oldIndexMapNewIndex = new Array(newLength); //新旧索引映射
+        for (let i = 0; i < newLength; i++) {
+          oldIndexMapNewIndex[i] = 0;
         }
-        
+
+        for (let start = i; start <= e2; start++) {
+          const vnode = child[start];
+          newKeyMapVNode.set(vnode.key, start); //value值变为索引
+        }
+
         //遍历旧vnode，寻找需要删除和patch的
         for (let old = i; old <= e1; old++) {
-          let vnode=null
-          const preVnode = preChild[old]
+          let newIndex;
+          const preVnode = preChild[old];
           //旧节点有key
           if (preVnode.key != null) {
-             vnode = newKeyMapVNode.get(preVnode.key)
+            newIndex = newKeyMapVNode.get(preVnode.key);
             //在map中找到旧节点对于的key
-          }else{
+          } else {
             //旧节点无key，遍历新节点查找
-            for(let n=i;n<=e2;n++){
-              if(isSameVnodeType(preVnode,child[n])){
-                vnode=preVnode
-                break
+            for (let n = i; n <= e2; n++) {
+              if (isSameVnodeType(preVnode, child[n])) {
+                newIndex = n;
+                break;
               }
             }
           }
 
           //查询结束，两种情况，有或无
-          if(vnode){
-            //此处patch时，是对新旧节点初始的patch，anchor为null
-            patch(preVnode,vnode,container,parent,null)
-          }else{
-            remove(preVnode.$el)
+          if (newIndex != undefined) {
+            oldIndexMapNewIndex[newIndex - i] = old + 1; //注意这里的赋值，因为后续getSequence得到为索引
+            //此处patch时，是对新旧节点初始的patch，故anchor为null
+            patch(preVnode, child[newIndex], container, parent, null);
+          } else {
+            remove(preVnode.$el);
+          }
+        }
+
+        //开始处理移动和增加功能
+        const increasingNewIndexSequence = getSequence(oldIndexMapNewIndex); //递增子序列，注意返回值为索引
+        let j = increasingNewIndexSequence.length - 1;
+        //针对新节点倒叙遍历
+        for (let start = newLength - 1; start >= 0; start--) {
+          const index = start + i;
+          const anchor = index + 1 < child.length ? child[index + 1].$el : null; //边缘情况，最后面需要插入的后面无节点
+          if (j < 0 || start != increasingNewIndexSequence[j]) {
+            insert(child[index].$el, container, anchor);
+          } else {
+            j--;
           }
         }
       }
@@ -279,4 +301,45 @@ export function createRenderer(options) {
     //此处正好需要导出一个creatApp,采用高阶函数
     createApp: createAppWrapper(render),
   };
+}
+
+function getSequence(arr) {
+  const p = arr.slice();
+  const result = [0];
+  let i, j, u, v, c;
+  const len = arr.length;
+  for (i = 0; i < len; i++) {
+    const arrI = arr[i];
+    if (arrI !== 0) {
+      j = result[result.length - 1];
+      if (arr[j] < arrI) {
+        p[i] = j;
+        result.push(i);
+        continue;
+      }
+      u = 0;
+      v = result.length - 1;
+      while (u < v) {
+        c = (u + v) >> 1;
+        if (arr[result[c]] < arrI) {
+          u = c + 1;
+        } else {
+          v = c;
+        }
+      }
+      if (arrI < arr[result[u]]) {
+        if (u > 0) {
+          p[i] = result[u - 1];
+        }
+        result[u] = i;
+      }
+    }
+  }
+  u = result.length;
+  v = result[u - 1];
+  while (u-- > 0) {
+    result[u] = v;
+    v = p[v];
+  }
+  return result;
 }
