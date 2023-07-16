@@ -1,1 +1,3 @@
 node_modules
+lib -f
+a.js

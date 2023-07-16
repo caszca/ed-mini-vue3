@@ -4,6 +4,7 @@ import { createComponentInstance, setupComponent } from "./component";
 import { EMITY_PROPS } from "./componentProps";
 import { createAppWrapper } from "./createApp";
 import { Fragment, Text } from "./vnode";
+import { queueJobs } from "./scheduler";
 
 export function createRenderer(options) {
   const { patchProp, insert, createElement, createText, setText, remove } =
@@ -312,24 +313,33 @@ export function createRenderer(options) {
   }
 
   function setupRenderEffect(instance, container, anchor) {
-    instance.update = effect(() => {
-      //组件第一次挂载时
-      if (!instance.isMounted) {
-        //此subTree下方的第一个虚拟节点
-        const subTree = (instance.subTree = instance.vnode.type.render.call(
-          instance.proxy
-        ));
-        //获取到children后patch，这是每个组件必过之地，且也是与children交互之地，传递自己作为父组件
-        patch(null, subTree, container, instance, anchor);
-        //将$el挂载在实例对象上
-        instance.$el = subTree.$el;
-        instance.isMounted = true;
-      } else {
-        const subTree = instance.vnode.type.render.call(instance.proxy);
-        patch(instance.subTree, subTree, container, instance, anchor);
-        instance.subTree = subTree;
+    instance.update = effect(
+      () => {
+        //组件第一次挂载时
+        if (!instance.isMounted) {
+          //此subTree下方的第一个虚拟节点
+          const subTree = (instance.subTree = instance.vnode.type.render.call(
+            instance.proxy
+          ));
+          //获取到children后patch，这是每个组件必过之地，且也是与children交互之地，传递自己作为父组件
+          patch(null, subTree, container, instance, anchor);
+          //将$el挂载在实例对象上
+          instance.$el = subTree.$el;
+          instance.isMounted = true;
+        } else {
+          console.log("patch component");
+          const subTree = instance.vnode.type.render.call(instance.proxy);
+          patch(instance.subTree, subTree, container, instance, anchor);
+          instance.subTree = subTree;
+        }
+      },
+      {
+        scheduler() {
+          //组件多次响应式数据多次改变时，用于缓存首次更新函数到队列中
+          queueJobs(instance.update);
+        },
       }
-    });
+    );
   }
   return {
     render,
