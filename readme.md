@@ -254,3 +254,13 @@ oldIndexMapNewIndex[newIndex - i] = old + 1;注意赋值+1，代表着旧节点�
 第四种：setTimeout(flushCallbacks, 0)
 ```
 
+## 解析模板
+
+```
+针对template字符串，我们需要先通过parse将其由字符串转换为AST(抽象语法树)，我们可以知道
+AST其实就是一个对象，是对模板的描述，比起操作字符串，利用对象我们更容易做操作。转化为AST
+后，我们可以通过transform对AST进行增删改查的操作，然后再将AST转换为一个render函数，调用
+即可。
+
+对template字符串的操作，我们是parse然后逐渐向后移动。
+```
