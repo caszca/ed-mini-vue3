@@ -103,7 +103,7 @@ vue3默认渲染到DOM平台，而如果我们想要将项目渲染到canvas平�
 另外因为patch的两个作用（注意事项里），我们需要传递参数时，需要传递前后两个vnode。
 ```
 
-##  patchProps 模块
+## patchProps 模块
 
 ```
 更新DOM元素的attribute属性，得到prevnode与现在的vnode，preVnode中有$el，而现在的vnode中是不存在的，
@@ -218,12 +218,10 @@ oldIndexMapNewIndex[newIndex - i] = old + 1;注意赋值+1，代表着旧节点�
 ```
 现在一个组件里有另一个组件，响应式数据更新时，每次patch到component，执行mount操作，
 我们需要去判断添加update操作。
-一个组件需要更新patch时，需要重新去调用effect中的函数来patch它自己的subtree.  
+一个组件需要更新patch时，需要重新去调用effect中的函数来patch它自己的subtree.
 ```
 
-
-
-## DOM异步更新
+## DOM 异步更新
 
 ```
 当你在 Vue 中更改响应式状态时，最终的 DOM 更新并不是同步生效的，而是由 Vue 将它们缓存在一个队列中，
@@ -241,9 +239,7 @@ oldIndexMapNewIndex[newIndex - i] = old + 1;注意赋值+1，代表着旧节点�
 
 ```
 
-
-
-## 实现nextTick功能
+## 实现 nextTick 功能
 
 ```
 只需要将传入函数放入微任务队列即可。而其放入微任务队列的方法官方有四种，优雅降次，
@@ -263,4 +259,8 @@ AST其实就是一个对象，是对模板的描述，比起操作字符串，�
 即可。
 
 对template字符串的操作，我们是parse然后逐渐向后移动。
+
+parse时有三类：mustache语法{{}}、HTML元素例如div、span等、普通文本。
+注意点在解析element时，对象中有个children属性-[]-存储的是其内的数据，对应函数则是parseChildren,
+其结束情况则在遇到闭合标签时.
 ```

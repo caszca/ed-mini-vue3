@@ -24,10 +24,10 @@ describe("Parse", () => {
       expect(ast.children[0]).toStrictEqual({
         type: NodeType.ELEMENT,
         tag: "div",
+        children: [],
       });
     });
   });
-
 });
 
 //单纯的text
@@ -37,8 +37,56 @@ describe("text", () => {
 
     expect(ast.children[0]).toStrictEqual({
       type: NodeType.TEXT,
-      content: "some text"
+      content: "some text",
     });
   });
 });
 
+test("hello world", () => {
+  const ast = baseParse("<div>hi,{{message}}</div>");
+  expect(ast.children[0]).toStrictEqual({
+    type: NodeType.ELEMENT,
+    tag: "div",
+    children: [
+      {
+        type: NodeType.TEXT,
+        content: "hi,",
+      },
+      {
+        type: NodeType.INTERPOLATION,
+        content: {
+          type: NodeType.SIMPLE_EXPRESSION,
+          content: "message",
+        },
+      },
+    ],
+  });
+});
+
+test("Nested element ", () => {
+  const ast = baseParse("<div><p>hi</p>{{message}}</div>");
+
+  expect(ast.children[0]).toStrictEqual({
+    type: NodeType.ELEMENT,
+    tag: "div",
+    children: [
+      {
+        type: NodeType.ELEMENT,
+        tag: "p",
+        children: [
+          {
+            type: NodeType.TEXT,
+            content: "hi",
+          },
+        ],
+      },
+      {
+        type: NodeType.INTERPOLATION,
+        content: {
+          type: NodeType.SIMPLE_EXPRESSION,
+          content: "message",
+        },
+      },
+    ],
+  });
+});
