@@ -1,4 +1,4 @@
-export function transform(ast, options) {
+export function transform(ast, options = {}) {
   const context = createTransformContext(ast, options);
   traverseNode(ast, context);
 }
