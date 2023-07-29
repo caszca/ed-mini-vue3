@@ -1,3 +1,5 @@
+//负责将template字符串转化为ats(抽象语法树)
+
 import { NodeType } from "./ast";
 
 const enum TagType {
@@ -111,9 +113,15 @@ function parseInterpolation(context) {
 }
 
 function createRoot(children) {
-  return {
+  const root = {
+    parameter: [],
+    pushParameter(args) {
+      root.parameter = args;
+    },
+    type: NodeType.ROOT,
     children,
   };
+  return root;
 }
 
 function createParserContext(content) {
