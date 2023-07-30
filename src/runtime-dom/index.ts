@@ -52,3 +52,5 @@ const options = {
 
 const { render, createApp } = createRenderer(options);
 export { render, createApp };
+
+export * from "../runtime-core/index";

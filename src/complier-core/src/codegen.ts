@@ -3,7 +3,7 @@
 import { NodeType } from "./ast";
 
 function handle(val: any) {
-  return `${val} as _${val}`;
+  return `${val} : _${val}`;
 }
 //处理import情况
 function handleImport(ast: any, push) {
@@ -13,7 +13,7 @@ function handleImport(ast: any, push) {
     for (const val of parameter) {
       par.push(handle(val));
     }
-    push(`import { ${par.join(", ")} } from 'vue'`);
+    push(`const { ${par.join(", ")} } = vue`);
     push("\n");
   }
 }

@@ -315,11 +315,13 @@ export function createRenderer(options) {
   function setupRenderEffect(instance, container, anchor) {
     instance.update = effect(
       () => {
+        const { proxy } = instance;
         //组件第一次挂载时
         if (!instance.isMounted) {
           //此subTree下方的第一个虚拟节点
-          const subTree = (instance.subTree = instance.vnode.type.render.call(
-            instance.proxy
+          const subTree = (instance.subTree = instance.render.call(
+            proxy,
+            proxy
           ));
           //获取到children后patch，这是每个组件必过之地，且也是与children交互之地，传递自己作为父组件
           patch(null, subTree, container, instance, anchor);
@@ -328,7 +330,7 @@ export function createRenderer(options) {
           instance.isMounted = true;
         } else {
           console.log("patch component");
-          const subTree = instance.vnode.type.render.call(instance.proxy);
+          const subTree = instance.render.call(proxy, proxy);
           patch(instance.subTree, subTree, container, instance, anchor);
           instance.subTree = subTree;
         }

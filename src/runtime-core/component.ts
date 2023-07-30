@@ -59,7 +59,13 @@ function handleSetupResult(setupResult: any, instance: any) {
 
 //挂载render函数
 function finishComponentSetup(instance: any) {
-  const { render } = instance.vnode.type;
+  const { type } = instance.vnode;
+  let { render } = type;
+  if (!render && complier) {
+    if (type.template) {
+      render = complier(type.template);
+    }
+  }
   if (render) {
     instance.render = render;
   }
@@ -73,4 +79,10 @@ export function getCurrentInstance() {
 
 function setCurrentInstance(value) {
   currentInstance = value;
+}
+
+let complier;
+
+export function registerRuntimeCompiler(_complier) {
+  complier = _complier;
 }
