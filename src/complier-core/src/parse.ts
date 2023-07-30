@@ -1,6 +1,7 @@
 //负责将template字符串转化为ats(抽象语法树)
 
 import { NodeType } from "./ast";
+import { helperMapName } from "./runtimeConst";
 
 const enum TagType {
   Start,
@@ -114,9 +115,9 @@ function parseInterpolation(context) {
 
 function createRoot(children) {
   const root = {
-    parameter: [],
-    pushParameter(args) {
-      root.parameter = args;
+    parameter: new Set(),
+    pushParameter(args: any) {
+      root.parameter.add(helperMapName[args]);
     },
     type: NodeType.ROOT,
     children,

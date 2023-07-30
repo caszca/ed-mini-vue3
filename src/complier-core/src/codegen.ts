@@ -2,17 +2,24 @@
 
 import { NodeType } from "./ast";
 
+function handle(val: any) {
+  return `${val} as _${val}`;
+}
 //处理import情况
 function handleImport(ast: any, push) {
   const { parameter } = ast;
-  if (parameter.length) {
-    const par = parameter.map((val) => `${val} as _${val}`).join(", ");
-    push(`import { ${par} } from 'vue'`);
+  if (parameter.size) {
+    let par: string[] = [];
+    for (const val of parameter) {
+      par.push(handle(val));
+    }
+    push(`import { ${par.join(", ")} } from 'vue'`);
     push("\n");
   }
 }
 
 export function generate(ast) {
+  console.log("-----", ast.children[0]);
   const context = createCodegenContext(ast);
   const { push } = context;
   handleImport(ast, push);
@@ -30,14 +37,30 @@ function codegen(rootNode, context) {
       genText(rootNode, context);
       break;
     case NodeType.INTERPOLATION:
-      return genInterpolation(rootNode, context);
+      genInterpolation(rootNode, context);
       break;
 
     case NodeType.SIMPLE_EXPRESSION:
-      return genSimpleExpression(rootNode, context);
+      genSimpleExpression(rootNode, context);
+      break;
+
+    case NodeType.ELEMENT:
+      genElement(rootNode, context);
+      break;
+
+    case NodeType.COMPOUND_EXPRESSION:
+      genCompound(rootNode, context);
       break;
     default:
       break;
+  }
+}
+
+function codegenChildren(nodes, context) {
+  if (nodes.length) {
+    for (const node of nodes) {
+      codegen(node, context);
+    }
   }
 }
 
@@ -69,4 +92,22 @@ function genInterpolation(node: any, context) {
   push(")");
 }
 
+function genElement(node, context) {
+  const { push } = context;
+  push(`_createElementVNode(`);
+  genNodeList(node, context);
+  push(")");
+}
+
+function genNodeList(node, context) {
+  const { push } = context;
+  const { tag, props, children } = node;
+  push(`'${tag}', ${props || null}, `);
+  console.log(children, "----------");
+  children ? codegenChildren(children, context) : push("null");
+}
+
+function genCompound(node, context) {
+  codegenChildren(node.children, context);
+}
 //return function render(_ctx, _cache, $props, $setup, $data, $options) { return "hi" }
