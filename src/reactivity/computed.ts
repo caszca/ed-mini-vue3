@@ -5,7 +5,7 @@ import { reactiveEffect } from "./effect";
 class computedRef {
   private _effect; //依赖对象
   private _dirty: boolean = true; //控制是否采用缓存
-  private _value;
+  private _value; //缓存
   constructor(getter) {
     this._effect = new reactiveEffect(getter);
     //此后，只要响应式数据发生改变时，都不是去立即执行依赖函数getter，

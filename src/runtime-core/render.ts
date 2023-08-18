@@ -67,16 +67,16 @@ export function createRenderer(options) {
   }
 
   function patchElement(preVnode, vnode, container, parent, anchor) {
-    console.log("update");
+    console.log("update element");
     const el = (vnode.$el = preVnode.$el);
     const preProps = preVnode.props || EMITY_PROPS;
     const props = vnode.props || EMITY_PROPS;
-    patchChildren(el, preVnode, vnode, container, parent, anchor);
+    patchElementChildren(el, preVnode, vnode, container, parent, anchor);
     patchProps(el, preProps, props);
   }
 
   //更新子节点
-  function patchChildren(
+  function patchElementChildren(
     el: any,
     preVnode: any,
     vnode: any,
@@ -292,7 +292,8 @@ export function createRenderer(options) {
     const instance = (vnode.instance = preVnode.instance);
     vnode.$el = preVnode.$el;
     instance.vnode = vnode;
-    if (shouComponentUpdate(preVnode, vnode)) {
+    //根据组件的props来判断是否更新
+    if (shouldComponentUpdate(preVnode, vnode)) {
       //需要更新
       const { update } = instance;
       instance.$props = vnode.props;
@@ -301,7 +302,7 @@ export function createRenderer(options) {
   }
 
   //根据其传递进来的props判断是否需要更新，shallowEquall
-  function shouComponentUpdate(preVnode, vnode) {
+  function shouldComponentUpdate(preVnode, vnode) {
     const preProps = preVnode.props;
     const { props } = vnode;
     for (const key in props) {
@@ -318,14 +319,14 @@ export function createRenderer(options) {
         const { proxy } = instance;
         //组件第一次挂载时
         if (!instance.isMounted) {
-          //此subTree下方的第一个虚拟节点
+          //subTree为虚拟DOM树，此subTree下方的第一个虚拟节点
           const subTree = (instance.subTree = instance.render.call(
             proxy,
             proxy
           ));
           //获取到children后patch，这是每个组件必过之地，且也是与children交互之地，传递自己作为父组件
           patch(null, subTree, container, instance, anchor);
-          //将$el挂载在实例对象上
+          //将$el挂载在组件实例上
           instance.$el = subTree.$el;
           instance.isMounted = true;
         } else {

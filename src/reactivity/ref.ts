@@ -73,6 +73,7 @@ export function proxyRefs(raw) {
       return unRef(Reflect.get(target, key));
     },
 
+    //set时，考虑将val包裹程ref，情况-只有要设置的属性是ref，设置的val不为Ref
     set(target, key, value, receiver) {
       if (isRef(Reflect.get(target, key)) && !isRef(value))
         return Reflect.set(target, key, ref(value));

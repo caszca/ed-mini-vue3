@@ -11,9 +11,8 @@ export default {
   render() {
     //插槽
     const app = h("h1", {}, "zs");
-    const f = h("div", {}, "lisi");
     //const foo = h(Foo, {}, [app, f])
-    const foo = h(Foo, {}, app);
+    const foo = h(Foo, {}, [app]);
     return h("div", {}, [foo]);
   },
 };

@@ -7,6 +7,7 @@ const set = createSetter();
 const readonlyGet = createGetter(true);
 const shallowReadonlyGet = createGetter(true, true);
 
+//进入此getter只有四种情况：reactive、shallowReactive、readonly、shallowReadonly
 function createGetter(isReadonly = false, isShallow = false) {
   return function (target, key, receiver) {
     if (key === REACTIVE_FLAGS.IS_REACTIVE) return !isReadonly;

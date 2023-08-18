@@ -19,7 +19,7 @@ export function transformCompound(node, context) {
           if (isText_Interpolation(nodej)) {
             //相近节点为text与插槽（不区分先后）
             if (!container) {
-              //初次
+              //初次F
               container = children[i] = {
                 type: NodeType.COMPOUND_EXPRESSION,
                 children: [node],

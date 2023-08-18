@@ -44,7 +44,7 @@ function isEnd(context, parentTag) {
 function parseText(context) {
   let { source } = context;
   const delimiter = ["{{", "<", "</"];
-  let endIndex = source.length;
+  let endIndex = source.length; //找到文本最后的位置，方便截取
   for (const key of delimiter) {
     let index = source.indexOf(key);
     if (index >= 0 && index < endIndex) {
@@ -53,6 +53,7 @@ function parseText(context) {
   }
 
   if (endIndex == -1) {
+    //后续都是文本
     source = parseTextSlice(context, source.length);
   } else {
     source = parseTextSlice(context, endIndex);
@@ -115,7 +116,7 @@ function parseInterpolation(context) {
 
 function createRoot(children) {
   const root = {
-    parameter: new Set(),
+    parameter: new Set(), //导入函数时所需的函数集合
     pushParameter(args: any) {
       root.parameter.add(helperMapName[args]);
     },

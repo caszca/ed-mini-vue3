@@ -5,17 +5,16 @@ import { NodeType } from "./ast";
 function handle(val: any) {
   return `${val} : _${val}`;
 }
-//处理import情况
-function handleImport(ast: any, push) {
-  const { parameter } = ast;
-  if (parameter.size) {
-    let par: string[] = [];
-    for (const val of parameter) {
-      par.push(handle(val));
-    }
-    push(`const { ${par.join(", ")} } = vue`);
-    push("\n");
-  }
+
+function createCodegenContext(ast) {
+  const context = {
+    code: "",
+    push(source) {
+      context.code += source;
+    },
+    ast,
+  };
+  return context;
 }
 
 export function generate(ast) {
@@ -29,6 +28,19 @@ export function generate(ast) {
   codegen(ast.children[0], context);
   push(" }");
   return context;
+}
+
+//处理import情况
+function handleImport(ast: any, push) {
+  const { parameter } = ast;
+  if (parameter.size) {
+    let par: string[] = [];
+    for (const val of parameter) {
+      par.push(handle(val));
+    }
+    push(`const { ${par.join(", ")} } = vue`);
+    push("\n");
+  }
 }
 
 function codegen(rootNode, context) {
@@ -62,17 +74,6 @@ function codegenChildren(nodes, context) {
       codegen(node, context);
     }
   }
-}
-
-function createCodegenContext(ast) {
-  const context = {
-    code: "",
-    push(source) {
-      context.code += source;
-    },
-    ast,
-  };
-  return context;
 }
 
 function genText(node: any, context) {

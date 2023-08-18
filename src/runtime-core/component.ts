@@ -8,6 +8,7 @@ import { proxyRefs } from "../reactivity/ref";
 export function createComponentInstance(vnode, parent) {
   const vm = {
     vnode,
+    proxy: null, //数据代理对象
     setupState: {},
     $el: null,
     $slots: null,
@@ -29,6 +30,8 @@ export function setupComponent(instance: any) {
   //初始化props
   initProps(instance);
   initSlots(instance);
+
+  //执行setup,挂载结果
   setupStatefulComponent(instance);
 }
 

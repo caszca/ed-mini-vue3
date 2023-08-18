@@ -2,6 +2,7 @@
 import { NodeType } from "./ast";
 import { CREATE_ELEMENT_VNODE, TO_DISPLAY_STRING } from "./runtimeConst";
 import { transformCompound } from "./transform/transformCompound";
+
 export function transform(ast, options = {}) {
   const context = createTransformContext(ast, options);
   traverseNode(ast, context);
